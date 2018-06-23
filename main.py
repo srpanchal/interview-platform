@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import label_image
+import detect_emption
 
 def start():
     face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_alt.xml')
@@ -23,9 +23,9 @@ def start():
                 cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
 
             cv2.imshow('video', img)
-
-            label_image.main
-
+            # cv2.imwrite("frame.jpg", img)
+            # emotion = detect_emption.predict_emotion('tf/retrained_graph.pb', 'frame.jpg', 'tf/retrained_labels.txt', 299, 299, 0, 255, 'Placeholder', 'final_result')
+            # print(emotion)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
