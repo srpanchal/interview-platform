@@ -2,3 +2,5 @@ training_data/
 venv/
 tf/
 .idea/
+/newtf/
+/formatted/
