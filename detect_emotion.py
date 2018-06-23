@@ -5,8 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 
-def predict_emotion(model_file, file_name, label_file, input_height, input_width, input_mean, input_std, input_layer, output_layer):
-    graph = load_graph(model_file)
+def predict_emotion(graph, file_name, labels, input_height, input_width, input_mean, input_std, input_layer, output_layer):
     t = read_tensor_from_image_file(
         file_name,
         input_height=input_height,
@@ -26,10 +25,48 @@ def predict_emotion(model_file, file_name, label_file, input_height, input_width
     results = np.squeeze(results)
 
     top_k = results.argsort()[-5:][::-1]
-    labels = load_labels(label_file)
+
+    maxProb=0
+    maxIndex=None
     for i in top_k:
+        if(results[i] > maxProb):
+            maxProb = results[i]
+            maxIndex = i
         print(labels[i], results[i])
-    return labels[0]
+    if(maxIndex != None):
+        return labels[maxIndex], results[maxIndex]
+
+def predict_emotion_custom(graph, image, labels, input_height, input_width, input_mean, input_std, input_layer, output_layer):
+    t = read_tensor_from_image(
+        image,
+        input_height=input_height,
+        input_width=input_width,
+        input_mean=input_mean,
+        input_std=input_std)
+
+    input_name = "import/" + input_layer
+    output_name = "import/" + output_layer
+    input_operation = graph.get_operation_by_name(input_name)
+    output_operation = graph.get_operation_by_name(output_name)
+
+    with tf.Session(graph=graph) as sess:
+        results = sess.run(output_operation.outputs[0], {
+            input_operation.outputs[0]: t
+        })
+    results = np.squeeze(results)
+
+    top_k = results.argsort()[-5:][::-1]
+
+    maxProb=0
+    maxIndex=None
+    for i in top_k:
+        if(results[i] > maxProb):
+            maxProb = results[i]
+            maxIndex = i
+        print(labels[i], results[i])
+    if(maxIndex != None):
+        return labels[maxIndex], results[maxIndex]
+
 
 def load_graph(model_file):
   graph = tf.Graph()
@@ -63,6 +100,23 @@ def read_tensor_from_image_file(file_name,
     image_reader = tf.image.decode_jpeg(
         file_reader, channels=3, name="jpeg_reader")
   float_caster = tf.cast(image_reader, tf.float32)
+  dims_expander = tf.expand_dims(float_caster, 0)
+  resized = tf.image.resize_bilinear(dims_expander, [input_height, input_width])
+  normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
+  sess = tf.Session()
+  result = sess.run(normalized)
+
+  return result
+
+def read_tensor_from_image(image,
+                                input_height=299,
+                                input_width=299,
+                                input_mean=0,
+                                input_std=255):
+  input_name = "file_reader"
+  output_name = "normalized"
+  image = np.asarray(image)
+  float_caster = tf.cast(image, tf.float32)
   dims_expander = tf.expand_dims(float_caster, 0)
   resized = tf.image.resize_bilinear(dims_expander, [input_height, input_width])
   normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])

@@ -1,33 +1,34 @@
 import cv2
 import numpy as np
-import detect_emption
+import detect_emotion
+import imutils
+
 
 def start():
     face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_alt.xml')
     eye_cascade = cv2.CascadeClassifier('data/haarcascade_eye.xml')
 
     cap = cv2.VideoCapture(0)
+    graph = detect_emotion.load_graph('tf/retrained_graph.pb')
+    labels = detect_emotion.load_labels('tf/retrained_labels.txt')
 
     while cap.isOpened():
-        ret, img = cap.read()
-
+        success, img = cap.read()
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        faces = detect_faces(face_cascade, img)
+
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
         for (x, y, w, h) in faces:
-            img = cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-            roi_gray = gray[y:y + h, x:x + w]
-            roi_color = img[y:y + h, x:x + w]
-            eyes = eye_cascade.detectMultiScale(roi_gray)
-            for (ex, ey, ew, eh) in eyes:
-                cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
+            cropped_face = img[y:y + h, x:x + w]
+            cropped_face_array = imutils.resize(cropped_face, width=299, height=299)
+            emotion, probability = detect_emotion.predict_emotion_custom(graph, cropped_face_array, labels, 299, 299, 0, 255, 'Placeholder',
+                                                            'final_result')
 
-            cv2.imshow('video', img)
-            # cv2.imwrite("frame.jpg", img)
-            # emotion = detect_emption.predict_emotion('tf/retrained_graph.pb', 'frame.jpg', 'tf/retrained_labels.txt', 299, 299, 0, 255, 'Placeholder', 'final_result')
-            # print(emotion)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            cv2.putText(img, str(emotion) + ' : ' + str(probability), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, 255)
+            cv2.imshow('img', img)
+            print(emotion)
+        if cv2.waitKey(5) & 0xFF == ord('q'):
+            break
 
     cap.release()
     cv2.destroyAllWindows()
@@ -40,6 +41,7 @@ def detect_faces(face_cascade, colored_img, scaleFactor=1.2):
     faces = face_cascade.detectMultiScale(gray, scaleFactor=scaleFactor, minNeighbors=5);
 
     return faces
+
 
 if __name__ == '__main__':
     start()
