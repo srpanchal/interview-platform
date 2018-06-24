@@ -2,5 +2,8 @@ training_data/
 venv/
 tf/
 .idea/
-/newtf/
+/tf_cropped/
 /formatted/
+/tf_eyes/
+/training_data_cropped/
+/data/output/

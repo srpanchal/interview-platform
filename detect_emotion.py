@@ -32,7 +32,7 @@ def predict_emotion(graph, file_name, labels, input_height, input_width, input_m
         if(results[i] > maxProb):
             maxProb = results[i]
             maxIndex = i
-        print(labels[i], results[i])
+        #print(labels[i], results[i])
     if(maxIndex != None):
         return labels[maxIndex], results[maxIndex]
 
@@ -63,7 +63,7 @@ def predict_emotion_custom(graph, image, labels, input_height, input_width, inpu
         if(results[i] > maxProb):
             maxProb = results[i]
             maxIndex = i
-        print(labels[i], results[i])
+        #print(labels[i], results[i])
     if(maxIndex != None):
         return labels[maxIndex], results[maxIndex]
 
