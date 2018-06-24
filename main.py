@@ -2,12 +2,11 @@ import cv2
 import numpy as np
 import detect_emotion
 import imutils
-from datetime import datetime
-import time
 import csv
+import argparse
 
 
-def start():
+def start(args):
     face_cascade = cv2.CascadeClassifier('data/haarcascade_frontalface_alt.xml')
     eye_cascade = cv2.CascadeClassifier('data/frontalEyes35x16.xml')
 
@@ -17,9 +16,10 @@ def start():
     graph_eyes = detect_emotion.load_graph('tf_eyes/retrained_graph.pb')
     labels_eyes = detect_emotion.load_labels('tf_eyes/retrained_labels.txt')
 
-    writeFile = open('data/output/video_analyse_1.csv', 'w')
+    video, extention = str(args.video).split(".")
+    writeFile = open('data/output/'+ str(video) + '_analysis.csv', 'w')
 
-    cap = cv2.VideoCapture('data/videoplayback.3gp')
+    cap = cv2.VideoCapture('data/' + str(args.video))
     cap.set(3, 640)
     cap.set(4, 480)
     # cap.set(cv2.CAP_PROP_POS_MSEC, 1000)
@@ -63,11 +63,12 @@ def start():
                                                                                      255, 'Placeholder',
                                                                                      'final_result')
 
-                    cv2.putText(img, str(emotion) + ' : ' + str(probability_emo), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, 255)
+                    cv2.putText(img, str(emotion) + ' : ' + str(probability_emo), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                255)
                     # cv2.imshow('img', img)
                     writer.writerow([emotion, probability_emo, str(frameId / fps)])
                     print(str(emotion) + ' : ' + str(probability_emo) + ' @ ' + str(frameId / fps))
-                    cv2.imwrite('data/output/' + str(frameId / fps) + ".jpg", img)
+                    #cv2.imwrite('data/output/' + str(video) + '/' + str(frameId / fps) + ".jpg", img)
             if cv2.waitKey(5) & 0xFF == ord('q'):
                 break
     cap.release()
@@ -84,4 +85,7 @@ def detect_faces(face_cascade, colored_img, scaleFactor=1.2):
 
 
 if __name__ == '__main__':
-    start()
+    parser = argparse.ArgumentParser(description='input video file path')
+    parser.add_argument('video', type=str, help='video file path')
+    args = parser.parse_args()
+    start(args)
